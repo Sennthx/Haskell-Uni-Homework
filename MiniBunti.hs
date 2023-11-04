@@ -2,12 +2,7 @@
 
 module MiniBunti where
 
---- Ez alá a sor alá Zserbó engedélyével írhatsz, és pontosan azt, amit megengedett
-
 import Prelude (Bool(True, False), Integral, (<=), (+), (*), div, mod, String, (&&), not)
-
---- E felé a sor felé Zserbó engedélyével írhatsz, és pontosan azt, amit megengedett
---- Ezek után jöjjön a megoldásod
 
 toOctal :: Integral a => a -> [a]
 toOctal a = helper [] a 
@@ -32,7 +27,6 @@ octality a = helper (toOctal a) 0
 
 sick :: Integral a => String -> ([] Bool) -> ([] a)
 sick ('#':xs) givenB = reverse (compare 0 (concatBool (xs) True []) (givenB))
---sick ('#':xs) = concatBool (xs) True [] --> ez csak testingre van
    where
       compare :: Integral a => a -> ([] Bool) -> ([] Bool) -> ([] a)
       compare _ [] _ = []
@@ -81,7 +75,3 @@ sick ('#':xs) givenB = reverse (compare 0 (concatBool (xs) True []) (givenB))
       hexConvert xs = (False,[])
 
 sick _ _ = []
---sick _ = [] ez csak testingre van
-
--- Egy olyan fügvény kell, ami vissza adja a listát ameddig az első eleme true
--- Ha viszont false akkor kitörli a false-ot
