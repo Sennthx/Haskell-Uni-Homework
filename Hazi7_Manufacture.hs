@@ -102,9 +102,9 @@ module Manufacture where
       | m == 0 = Berkanan
       | m == 1 = Naudiz
       | m == 2 = Hagalaz
-      | m == 3 = Kaunan- Javított teszteset
+      | m == 3 = Kaunan
       | m == 4 = Ansuz
       | m == 5 = Fehu
          where
                m = Data.Char.ord c `mod` 6
-               
+      
