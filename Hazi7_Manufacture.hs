@@ -93,25 +93,15 @@ module Manufacture where
                getNumOfRunes (r, num) = r : getNumOfRunes (r, num-1)
 
 
-   newtype HumanMagic a = Enchant (a, [(Element, Integer)])
-      deriving(Show)
-   
+   newtype HumanMagic a = Enchant (a -> (a, [(Element, Integer)]))
 
-   t = \x -> case x of [] -> ([],[]); (f:s) -> (,) s $ map (, 1) $ maybe [] id $ lookup f scrible;
-
-   lookupChar :: Char -> [(Char, [Element])] -> [Element]
-   lookupChar c [] = []
-   lookupChar c ((ch,el):xs)
-      | c == ch = el
-      | c /= ch = lookupChar c xs
    sigil :: HumanMagic String -> String -> [Element]
-   sigil _ [] = []
-   sigil _ (c:cs) = (lookupChar c scrible) ++ (sigil _ cs)
+   sigil xs [] = []
+   sigil hm@(Enchant xs) str = decompile (snd $ f1 xs str)  ++ (sigil hm (fst $ f1 xs str))
       where
-         getXElement :: (Element, Integer) -> [Element]
-         getXElement (el, 0) = []
-         getXElement (el, num) = el : getXElement (el, num-1)
-         
+         f1 :: (String -> (String, [(Element, Integer)])) -> String -> (String, [(Element, Integer)])
+         f1 xs str = xs str
+    
 
    -- null $ snd $ spellCast (\_ _ -> True) $ replicate 100 Hagalaz
    --spellCast :: (Rune -> Rune -> Bool) -> [Rune] -> ([Rune], [Rune])
