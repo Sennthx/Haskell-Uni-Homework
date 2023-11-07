@@ -16,7 +16,7 @@ module Manufacture where
                 | Terra
                 | Lux
                 | Noctum
-               deriving(Eq)
+               deriving(Eq,Show)
    
    toName :: Rune -> String
    toName (Fehu) = "Fehu"
@@ -34,12 +34,11 @@ module Manufacture where
    toEnglish (Lux) = "Light"
    toEnglish (Noctum) = "Darkness"
 
-   newtype HumanMagic a = Enchant (a, [(Element, Integer)])
 
    vowels :: String
    vowels = "AEIOUaeiou"
-   consonLettersWithSpaceAndTab :: String
-   consonLettersWithSpaceAndTab = "BCDFGHJKLMNPQRSTVWXYZbcdfghjklmnpqrstvwxyz"
+   consonLetters :: String
+   consonLetters = "BCDFGHJKLMNPQRSTVWXYZbcdfghjklmnpqrstvwxyz"
 
    -- Első feladat első helper
    instances :: String -> Char -> Integer -> (String, Integer)
@@ -59,7 +58,7 @@ module Manufacture where
          conson f1 [] acc = acc
          conson f1 (s:rest) acc
             | f1 s vowels = conson f1 rest acc
-            | not $ f1 s consonLettersWithSpaceAndTab = conson f1 rest acc
+            | not $ f1 s consonLetters = conson f1 rest acc
             | otherwise = conson f1 rest (acc ++ s:[])
          compress :: (String -> Char -> Integer -> (String, Integer)) -> [String] -> [(Char, Integer)]
          compress f2 [] = []
@@ -92,6 +91,33 @@ module Manufacture where
                getNumOfRunes :: (Rune, Integer) -> [Rune]
                getNumOfRunes (r, 0) = []
                getNumOfRunes (r, num) = r : getNumOfRunes (r, num-1)
+
+
+   newtype HumanMagic a = Enchant (a, [(Element, Integer)])
+      deriving(Show)
+   
+
+   t = \x -> case x of [] -> ([],[]); (f:s) -> (,) s $ map (, 1) $ maybe [] id $ lookup f scrible;
+
+   lookupChar :: Char -> [(Char, [Element])] -> [Element]
+   lookupChar c [] = []
+   lookupChar c ((ch,el):xs)
+      | c == ch = el
+      | c /= ch = lookupChar c xs
+   sigil :: HumanMagic String -> String -> [Element]
+   sigil _ [] = []
+   sigil _ (c:cs) = (lookupChar c scrible) ++ (sigil _ cs)
+      where
+         getXElement :: (Element, Integer) -> [Element]
+         getXElement (el, 0) = []
+         getXElement (el, num) = el : getXElement (el, num-1)
+         
+
+   -- null $ snd $ spellCast (\_ _ -> True) $ replicate 100 Hagalaz
+   --spellCast :: (Rune -> Rune -> Bool) -> [Rune] -> ([Rune], [Rune])
+   --spellCast f1 (r:rest)
+      -- | f1 r = [r] ++ spellCast f1 
+
 
    -- Tesztelő függvények
    scrible :: [(Char, [Element])]
