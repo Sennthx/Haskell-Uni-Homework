@@ -79,22 +79,24 @@ module Manufacture where
       where
          getChars :: (a, Integer) -> [a]
          getChars (a, 0) = []
-         getChars (c,num) = c : getChars (c,num-1)
+         getChars (c,num)
+            | num < 0 = []
+            | otherwise = c : getChars (c,num-1)  
 
 
    rune :: (String -> (String, [(Rune, Integer)])) -> String -> [Rune]
    rune f1 [] = []
-   rune f1 str = getAllRunes (f1 str) ++ rune f1 (getRest $ f1 str)
+   rune f1 str = getAllRunes (f1 str) ++ rune f1 (fst $ f1 str)
       where
-         getRest :: (String, [(Rune, Integer)]) -> String
-         getRest (rest, arr) = rest
          getAllRunes :: (String, [(Rune, Integer)]) -> [Rune]
          getAllRunes (str, []) = []
          getAllRunes (str, (r,num):xs) = getNumOfRunes (r, num) ++ getAllRunes (str, xs)
             where
                getNumOfRunes :: (Rune, Integer) -> [Rune]
                getNumOfRunes (r, 0) = []
-               getNumOfRunes (r, num) = r : getNumOfRunes (r, num-1)
+               getNumOfRunes (r, num)
+                  | num < 0 = []
+                  | otherwise = r : getNumOfRunes (r, num-1)
 
 
    newtype HumanMagic a = Enchant (a -> (a, [(Element, Integer)]))
