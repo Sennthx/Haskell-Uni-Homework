@@ -72,7 +72,6 @@ module Manufacture where
                helper [] = []
                helper str@(c:rest) = (c, snd $ f2 rest c 1) : helper (fst $ f2 rest c 1)
 
-
    decompile :: [(a, Integer)] -> [a]
    decompile [] = []
    decompile (x:rest) = getChars x ++ decompile rest
