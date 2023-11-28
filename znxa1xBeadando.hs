@@ -75,8 +75,16 @@ module NagyBeadando where
 
    -- Helper functions
    modifyAliveHP :: Unit -> Integer -> Unit
+   modifyAliveHP (E (Alive (HaskellElemental a))) x
+      | x <= 0 = (E Dead)
    modifyAliveHP (E (Alive (HaskellElemental a))) x = (E (Alive (HaskellElemental x)))
+   --------------------
+   modifyAliveHP (E (Alive (Golem a))) x
+      | x <= 0 = (E Dead)
    modifyAliveHP (E (Alive (Golem a))) x = (E (Alive (Golem x)))
+   --------------------
+   modifyAliveHP (M (Alive (Master name hp spell))) x
+      | x <= 0 = (M Dead)
    modifyAliveHP (M (Alive (Master name hp spell))) x = (M (Alive (Master name x spell)))
 
    --------------------
@@ -103,8 +111,34 @@ module NagyBeadando where
          newUnit :: Unit -> Unit
          newUnit x = modifyAliveHP x (spell (getHP x))
 
-
-
+   --------------------
+   haskellBlast :: Army -> Army
+   haskellBlast [] = []
+   haskellBlast army@(a:ax) = modifyFrom army (getBestFiveIndex army 0 0 0 0) 0
+      where
+         getBestFiveIndex :: Army -> Integer -> Integer -> Integer -> Integer -> Integer
+         getBestFiveIndex [] _ bi _ _ = bi
+         getBestFiveIndex army@(x:xs) i bi bs md
+            | mostDead (take 5 army) == 5 = i
+            | mostDead (take 5 army) > md || (getHpSum (take 5 army)) > bs && mostDead (take 5 army) > md = getBestFiveIndex xs (i+1) i (getHpSum (take 5 army)) (mostDead (take 5 army))
+            | otherwise = getBestFiveIndex xs (i+1) bi bs md
+         --------------------
+         getHpSum :: Army -> Integer
+         getHpSum [] = 0
+         getHpSum (x:xs) = getHP x + getHpSum xs
+         --------------------
+         mostDead :: Army -> Integer
+         mostDead [] = 0
+         mostDead (x:xs)
+            | (getHP x) - 5 >= 0 = 1 + mostDead xs
+            | otherwise = 0 + mostDead xs
+         --------------------
+         modifyFrom :: Army -> Integer -> Integer -> Army
+         modifyFrom [] _ _ = []
+         modifyFrom (x:xs) bs i 
+            | i >= bs && i <= bs+4 = modifyAliveHP x ((getHP x) - 5) : modifyFrom xs bs (i+1)
+            | otherwise = x : modifyFrom xs bs (i+1)
+         --------------------
 
    -- Potion Master
    potionMaster =
