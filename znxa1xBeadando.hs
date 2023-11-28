@@ -1,6 +1,6 @@
 module NagyBeadando where
 
-   -- Tipus Aliasok
+   -- Type Alias
    type Name = String
    type Health = Integer
    type Spell = (Integer -> Integer)
@@ -56,8 +56,8 @@ module NagyBeadando where
          (M Dead) == (E Dead) = True
          (M state1) == (M state2) = state1 == state2
          (E state1) == (E state2) = state1 == state2
-   --------------------
 
+   --------------------
    formationFix :: Army -> Army
    formationFix army = fst (takeOutDead army ([], [])) ++ snd (takeOutDead army ([], []))
       where
@@ -68,27 +68,29 @@ module NagyBeadando where
             | (show a) == show (E Dead) = takeOutDead as (alive, a:dead)
             | otherwise = takeOutDead as (alive ++ [a], dead)
 
+   --------------------
    over :: Army -> Bool
    over [] = True
    over (x:xs) = show x == "Dead" && over xs
 
-   -- Segéd függvények
+   -- Helper functions
    modifyAliveHP :: Unit -> Integer -> Unit
    modifyAliveHP (E (Alive (HaskellElemental a))) x = (E (Alive (HaskellElemental x)))
    modifyAliveHP (E (Alive (Golem a))) x = (E (Alive (Golem x)))
    modifyAliveHP (M (Alive (Master name hp spell))) x = (M (Alive (Master name x spell)))
 
+   --------------------
    getAttackDamage :: Unit -> Integer
    getAttackDamage (E (Alive (HaskellElemental _))) = 3
    getAttackDamage (E (Alive (Golem _))) = 1
 
+   --------------------
    getHP :: Unit -> Integer
    getHP (E (Alive (HaskellElemental a))) = a
    getHP (E (Alive (Golem a))) = a
    getHP (M (Alive (Master name hp spell))) = hp
 
-
-
+   --------------------
    fight :: EnemyArmy -> Army -> Army
    fight [] army = army
    fight _ [] = []
@@ -101,11 +103,10 @@ module NagyBeadando where
          newUnit :: Unit -> Unit
          newUnit x = modifyAliveHP x (spell (getHP x))
 
-   {- fight ex ax = eval ex ax ax
-      where
-         eval :: EnemyArmy -> Army -> Army -> Army
-         eval  -}
 
+
+
+   -- Potion Master
    potionMaster =
       let plx x
             | x > 85  = x - plx (div x 2)
@@ -114,7 +115,7 @@ module NagyBeadando where
             | otherwise = x - 7
       in Master "PotionMaster" 170 plx
 
-   -- Mesterek
+   -- Masters
    papi = let
       tunderpor enemyHP
          | enemyHP < 8 = 0
@@ -127,7 +128,7 @@ module NagyBeadando where
    jani = Master "Jani" 100 (\x -> x - div x 4)
    skver = Master "Skver" 100 (\x -> div (x+4) 2)
 
-   -- Tesztek
+   -- Tests
    showState a = show a
    showMage a = show a
    eqMage a b =  a == b
