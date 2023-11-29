@@ -86,6 +86,9 @@ module NagyBeadando where
    modifyAliveHP (M (Alive (Master name hp spell))) x
       | x <= 0 = (M Dead)
    modifyAliveHP (M (Alive (Master name hp spell))) x = (M (Alive (Master name x spell)))
+   --------------------
+   modifyAliveHP (M Dead) _ = (M Dead)
+   modifyAliveHP (E Dead) _ = (E Dead)
 
    --------------------
    getAttackDamage :: Unit -> Integer
@@ -139,6 +142,32 @@ module NagyBeadando where
             | i >= bs && i <= bs+4 = modifyAliveHP x ((getHP x) - 5) : modifyFrom xs bs (i+1)
             | otherwise = x : modifyFrom xs bs (i+1)
          --------------------
+      
+   -- multiHeal helper
+   countNotDead :: Army -> Integer
+   countNotDead [] = 0
+   countNotDead (x:xs)
+      | (show x) == "Dead" = countNotDead xs
+      | otherwise = 1 + countNotDead xs
+
+   
+   multiHeal :: Health -> Army -> Army
+   multiHeal _ [] = []
+   multiHeal hp xs
+      | (length xs) - fromIntegral((countNotDead xs)) == length xs = xs
+   multiHeal hp army = check (helper hp army (0,[]))
+      where
+         helper :: Health -> Army -> (Integer, Army) -> (Integer, Army)
+         helper hp xs (hpAcc, acc)
+            | null xs = (hpAcc, acc)
+            | hp == 0 = (hpAcc, acc ++ xs)
+         helper hp (x:xs) (hpAcc, acc)
+            | show x == "Dead" = helper (hp) xs (hp,acc ++ [x])
+            | show x /= "Dead" = helper (hp-1) xs (hp-1,acc ++ [modifyAliveHP x (getHP x + 1)])
+         check :: (Integer, Army) -> Army
+         check (hp, army)
+            | hp == 0 = army
+            | otherwise = check (helper hp army (0,[]))
 
    -- Potion Master
    potionMaster =
