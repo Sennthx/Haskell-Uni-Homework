@@ -64,8 +64,8 @@ module NagyBeadando where
          takeOutDead :: Army -> (Army, Army) -> (Army, Army)
          takeOutDead [] acc = acc
          takeOutDead (a:as) (alive, dead)
-            | (show a) == show (M Dead) = takeOutDead as (alive, a:dead)
-            | (show a) == show (E Dead) = takeOutDead as (alive, a:dead)
+            -- | M Dead <- a = takeOutDead as (alive, a:dead)
+            | (show a) == "Dead" = takeOutDead as (alive, a:dead)
             | otherwise = takeOutDead as (alive ++ [a], dead)
 
    --------------------
