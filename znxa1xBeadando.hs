@@ -1,5 +1,6 @@
 module NagyBeadando where
    -- SSH teszt
+   
    -- Type Alias
    type Name = String
    type Health = Integer
