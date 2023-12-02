@@ -39,13 +39,13 @@ module Anima where
         | otherwise = Nothing
     --------------------
     changeHealt :: Familiar -> Int -> Familiar
-    changeHealt (Nota m n hp o) newHp = Nota m n newHp o
+    changeHealt (Nota m n hp o) newHp = Nota m n (hp+newHp) o
     --------------------
     -- Helper functions for play
     runAction :: Action -> Familiar -> Bool -> Familiar
-    runAction (Attack d) monster@(Nota m n hp o) False = changeHealt monster (hp - d)
-    runAction (Attack d) monster@(Nota m n hp o) True = changeHealt monster (hp - (div d 2))
-    runAction (Heal h) monster@(Nota m n hp o) _= changeHealt monster (hp + h)
+    runAction (Attack d) monster@(Nota m n hp o) False = changeHealt monster (-d)
+    runAction (Attack d) monster@(Nota m n hp o) True = changeHealt monster ((-(div d 2)))
+    runAction (Heal h) monster@(Nota m n hp o) _= changeHealt monster (h)
     runAction (Defend) monster _ = monster
     --------------------  
     getEither :: Either Action Action -> Action
@@ -64,14 +64,16 @@ module Anima where
     getTuple ((f1,f2), _, _) = (f1,f2)
     --------------------
     play :: (Familiar, Familiar) -> [Either Action Action] -> (Familiar, Familiar)
-    play (f1, f2) actions = getTuple (foldr (playWithAcc) ((f1, f2), (Attack 0), (Attack 0)) actions)
+    play (f1, f2) actions = getTuple (foldr (playWithAcc) ((f1, f2), (Attack 0), (Attack 0)) (reverse actions))
         where
             playWithAcc ::  Either Action Action -> ((Familiar, Familiar), Action, Action) -> ((Familiar, Familiar), Action, Action)
             playWithAcc x ((f1, f2), lAcc, rAcc)
+                | isLeft x && (getEither x) == Defend = ((f1, f2), (getEither x), rAcc)
+                | not (isLeft x) && (getEither x) == Defend = ((f1, f2), lAcc, (getEither x))
                 | isLeft x && rAcc == Defend = ((f1, runAction (getEither x) f2 True), (getEither x), rAcc)
                 | not (isLeft x) && lAcc == Defend = ((runAction (getEither x) f1 True, f2), lAcc, (getEither x))
                 | isLeft x && isHeal (getEither x) = ((runAction (getEither x) f1 False, f2), (getEither x), rAcc)
-                | not (isLeft x) && isHeal (getEither x) = ((f1, runAction (getEither x) f2 False), (getEither x), rAcc)
+                | not (isLeft x) && isHeal (getEither x) = ((f1, runAction (getEither x) f2 False), lAcc, (getEither x))
                 | isLeft x = ((f1, runAction (getEither x) f2 False), (getEither x), rAcc)
                 | not (isLeft x) = ((runAction (getEither x) f1 False, f2), lAcc, (getEither x))
     --------------------
