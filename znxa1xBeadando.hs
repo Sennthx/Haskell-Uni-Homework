@@ -22,14 +22,15 @@ module NagyBeadando where
    --------------------
    data Entity = Golem Health
                | HaskellElemental Health
+               deriving(Show,Eq)
 
-   instance Show Entity where
+   {- instance Show Entity where
          show (Golem healt) = show healt
          show (HaskellElemental healt) = show healt
-
-   instance Eq Entity where
+ -}
+  {-  instance Eq Entity where
          (Golem hp1) == (Golem hp2) = hp1 == hp2
-         (HaskellElemental hp1) == (HaskellElemental hp2) = hp1 == hp2
+         (HaskellElemental hp1) == (HaskellElemental hp2) = hp1 == hp2 -}
 
    --------------------
    data Mage = Master Name Health Spell
@@ -47,12 +48,14 @@ module NagyBeadando where
              | E (State Entity)
 
    instance Show Unit where
-         show (M a) = show a
+         show (M (Alive a)) = show a
+         show (E (Alive a)) = show a
          show (E a) = show a
+         show (M a) = show a
 
    instance Eq Unit where
-         (E Dead) == (M Dead) = True
-         (M Dead) == (E Dead) = True
+         (E Dead) == (M Dead) = True -- Ez a sor kérdéses de működik
+         (M Dead) == (E Dead) = True -- Ez a sor kérdéses de működik
          (M state1) == (M state2) = state1 == state2
          (E state1) == (E state2) = state1 == state2
 
@@ -89,21 +92,24 @@ module NagyBeadando where
    modifyAliveHP (M Dead) _ = (M Dead)
    modifyAliveHP (E Dead) _ = (E Dead)
 
+   -- Helper functions
    --------------------
    getAttackDamage :: Unit -> Integer
    getAttackDamage (E (Alive (HaskellElemental _))) = 3
    getAttackDamage (E (Alive (Golem _))) = 1
-
    --------------------
    getHP :: Unit -> Integer
    getHP (E (Alive (HaskellElemental a))) = a
    getHP (E (Alive (Golem a))) = a
    getHP (M (Alive (Master name hp spell))) = hp
-
+   getHP (E Dead) = 0
+   getHP (M Dead) = 0
    --------------------
    fight :: EnemyArmy -> Army -> Army
    fight [] army = army
    fight _ [] = []
+   fight (unit@(E Dead):ex) (a:ax) = a : fight ex ax
+   fight (unit@(M Dead):ex) (a:ax) = a : fight ex ax
    fight (unit@(E (Alive z)):ex) (a:ax) = (modifyAliveHP a ((getHP a) - (getAttackDamage unit))) : fight ex ax
    fight ((M (Alive (Master name hp spell))):ex) unit@(a:ax) = (newUnit a) : fight ex (masterAttack spell ax)
       where
@@ -124,7 +130,8 @@ module NagyBeadando where
             | mostDead (take 5 army) == 5 = i
             | mostDead (take 5 army) > md || (getHpSum (take 5 army)) > bs && mostDead (take 5 army) > md = getBestFiveIndex xs (i+1) i (getHpSum (take 5 army)) (mostDead (take 5 army))
             | otherwise = getBestFiveIndex xs (i+1) bi bs md
-         --------------------
+         -- Helper functions
+         -------------------- 
          getHpSum :: Army -> Integer
          getHpSum [] = 0
          getHpSum (x:xs) = getHP x + getHpSum xs
@@ -148,13 +155,13 @@ module NagyBeadando where
    countNotDead (x:xs)
       | (show x) == "Dead" = countNotDead xs
       | otherwise = 1 + countNotDead xs
-
    
-   multiHeal :: Health -> Army -> Army
+   -- Needs fixing
+   {- multiHeal :: Health -> Army -> Army
    multiHeal _ [] = []
    multiHeal hp xs
       | (length xs) - fromIntegral((countNotDead xs)) == length xs = xs
-   multiHeal hp army = check (helper hp army (0,[]))
+   multiHeal hp army = checkIfOutOfHeal (helper hp army (0,[]))
       where
          helper :: Health -> Army -> (Integer, Army) -> (Integer, Army)
          helper hp xs (hpAcc, acc)
@@ -163,11 +170,12 @@ module NagyBeadando where
          helper hp (x:xs) (hpAcc, acc)
             | show x == "Dead" = helper (hp) xs (hp,acc ++ [x])
             | show x /= "Dead" = helper (hp-1) xs (hp-1,acc ++ [modifyAliveHP x (getHP x + 1)])
-         check :: (Integer, Army) -> Army
-         check (hp, army)
+         checkIfOutOfHeal :: (Integer, Army) -> Army
+         checkIfOutOfHeal (hp, army)
             | hp == 0 = army
-            | otherwise = check (helper hp army (0,[]))
-
+            | otherwise = checkIfOutOfHeal (helper hp army (0,[]))
+ -}
+ 
    -- Potion Master
    potionMaster =
       let plx x
