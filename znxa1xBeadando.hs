@@ -156,26 +156,31 @@ module NagyBeadando where
       | (show x) == "Dead" = countNotDead xs
       | otherwise = 1 + countNotDead xs
    
-   -- Needs fixing
-   {- multiHeal :: Health -> Army -> Army
+
+   multiHeal :: Health -> Army -> Army
    multiHeal _ [] = []
    multiHeal hp xs
-      | (length xs) - fromIntegral((countNotDead xs)) == length xs = xs
-   multiHeal hp army = checkIfOutOfHeal (helper hp army (0,[]))
-      where
-         helper :: Health -> Army -> (Integer, Army) -> (Integer, Army)
-         helper hp xs (hpAcc, acc)
-            | null xs = (hpAcc, acc)
-            | hp == 0 = (hpAcc, acc ++ xs)
-         helper hp (x:xs) (hpAcc, acc)
-            | show x == "Dead" = helper (hp) xs (hp,acc ++ [x])
-            | show x /= "Dead" = helper (hp-1) xs (hp-1,acc ++ [modifyAliveHP x (getHP x + 1)])
-         checkIfOutOfHeal :: (Integer, Army) -> Army
-         checkIfOutOfHeal (hp, army)
-            | hp == 0 = army
-            | otherwise = checkIfOutOfHeal (helper hp army (0,[]))
- -}
- 
+      | not (null(drop (fromIntegral hp) xs)) = healHpAmount hp xs
+      | (length xs) - fromIntegral((countNotDead xs)) == length xs = xs 
+      | null (drop (fromIntegral hp) xs) = checkIfOutOfHeal (helper hp xs (0,[]))
+         where
+            helper :: Health -> Army -> (Integer, Army) -> (Integer, Army)
+            helper hp xs (hpAcc, acc)
+               | null xs = (hpAcc, acc)
+               | hp == 0 = (hpAcc, acc ++ xs)
+            helper hp (x:xs) (hpAcc, acc)
+               | show x == "Dead" = helper (hp) xs (hp,acc ++ [x])
+               | show x /= "Dead" = helper (hp-1) xs (hp-1,acc ++ [modifyAliveHP x (getHP x + 1)])
+            checkIfOutOfHeal :: (Integer, Army) -> Army
+            checkIfOutOfHeal (hp, army)
+               | hp == 0 = army
+               | otherwise = checkIfOutOfHeal (helper hp army (0,[]))
+            healHpAmount :: Health -> Army -> Army
+            healHpAmount 0 xs = xs
+            healHpAmount hp (x:xs)
+               | show x == "Dead" = x : healHpAmount hp xs
+               | otherwise = modifyAliveHP x ((getHP x) + 1) : healHpAmount (hp - 1) xs 
+
    -- Potion Master
    potionMaster =
       let plx x
