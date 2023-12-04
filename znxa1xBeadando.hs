@@ -156,7 +156,6 @@ module NagyBeadando where
       | (show x) == "Dead" = countNotDead xs
       | otherwise = 1 + countNotDead xs
    
-
    multiHeal :: Health -> Army -> Army
    multiHeal _ [] = []
    multiHeal hp xs
