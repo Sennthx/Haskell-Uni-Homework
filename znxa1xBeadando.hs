@@ -166,6 +166,7 @@ module NagyBeadando where
                | hp == 0 = army
                | otherwise = checkIfOutOfHeal (helper hp army (0,[]))
             healHpAmount :: Health -> Army -> Army
+            healHpAmount _ [] = []
             healHpAmount 0 xs = xs
             healHpAmount hp (x:xs)
                | show x == "Dead" = x : healHpAmount hp xs
@@ -181,12 +182,12 @@ module NagyBeadando where
          fightUntilIsOver :: Army -> EnemyArmy -> (Army, EnemyArmy)
          fightUntilIsOver a ea
             | over a || over ea = (a, ea)
-            | otherwise = fightUntilIsOver (formationFix (multiHeal 20 (haskellBlast (fight ea a)))) (formationFix ((flip fight) ea a))
+            | otherwise = fightUntilIsOver (formationFix (multiHeal 20 (haskellBlast (fight ea a)))) (formationFix (fight a ea))
          getWinner :: (Army, EnemyArmy) -> Maybe Army {- vagy EnemyArmy -}
          getWinner (a, ea)
-            | over a = Just ea
+            | over a && over ea = Nothing
+            | over a  && not (over ea) = Just ea
             | over ea = Just a
-            | otherwise = Nothing
 
    ------------------------
    chain :: Amount -> (Army, EnemyArmy) -> (Army, EnemyArmy)
