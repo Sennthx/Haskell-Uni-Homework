@@ -23,15 +23,6 @@ module NagyBeadando where
    data Entity = Golem Health
                | HaskellElemental Health
                deriving(Show,Eq)
-
-   {- instance Show Entity where
-         show (Golem healt) = show healt
-         show (HaskellElemental healt) = show healt
- -}
-  {-  instance Eq Entity where
-         (Golem hp1) == (Golem hp2) = hp1 == hp2
-         (HaskellElemental hp1) == (HaskellElemental hp2) = hp1 == hp2 -}
-
    --------------------
    data Mage = Master Name Health Spell
    
@@ -180,6 +171,36 @@ module NagyBeadando where
                | show x == "Dead" = x : healHpAmount hp xs
                | otherwise = modifyAliveHP x ((getHP x) + 1) : healHpAmount (hp - 1) xs 
 
+   ------------------------
+   --- Bonusz feladatok ---
+   ------------------------
+   battle :: Army -> EnemyArmy -> Maybe Army {- vagy EnemyArmy lesz az eredmény. -}
+   battle [] [] = Nothing
+   battle army eArmy = getWinner (fightUntilIsOver army eArmy)
+      where
+         fightUntilIsOver :: Army -> EnemyArmy -> (Army, EnemyArmy)
+         fightUntilIsOver a ea
+            | over a || over ea = (a, ea)
+            | otherwise = fightUntilIsOver (formationFix (multiHeal 20 (haskellBlast (fight ea a)))) (formationFix ((flip fight) ea a))
+         getWinner :: (Army, EnemyArmy) -> Maybe Army {- vagy EnemyArmy -}
+         getWinner (a, ea)
+            | over a = Just ea
+            | over ea = Just a
+            | otherwise = Nothing
+
+   ------------------------
+   chain :: Amount -> (Army, EnemyArmy) -> (Army, EnemyArmy)
+   chain amount (a, ea) = chainR amount a ea [] []
+         where
+            chainR :: Amount -> Army -> EnemyArmy -> Army -> EnemyArmy -> (Army, EnemyArmy)
+            chainR amount a ea aAcc eaAcc
+               | amount == 0 = (reverse aAcc, reverse eaAcc)
+               | null a || null ea = (reverse aAcc, reverse eaAcc)
+               | amount > 0 && show (head ea) /= "Dead" && show (head a) /= "Dead" = chainR (amount-2) (tail a) (tail ea) (modifyAliveHP (head a) ((getHP (head a)) + amount):aAcc) ((modifyAliveHP (head ea) (((getHP (head ea))) - (amount-1))):eaAcc)
+               | amount > 0 && show (head ea) /= "Dead" && show (head a) == "Dead" = chainR (amount-1) (tail a) (tail ea) (modifyAliveHP (head a) ((getHP (head a)) + amount):aAcc) ((head ea):eaAcc)
+               | amount > 0 && show (head ea) == "Dead" && show (head a) /= "Dead" = chainR (amount-1) (tail a) (tail ea) ((head a):aAcc) ((modifyAliveHP (head ea) ((getHP (head ea)) - amount-1)):eaAcc)
+               | amount > 0 && show (head ea) == "Dead" && show (head a) == "Dead" = chainR (amount) (tail a) (tail ea) ((head a):aAcc) ((head ea):eaAcc)
+   
    -- Potion Master
    potionMaster =
       let plx x
