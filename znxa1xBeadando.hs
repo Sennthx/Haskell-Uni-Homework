@@ -191,17 +191,39 @@ module NagyBeadando where
 
    ------------------------
    chain :: Amount -> (Army, EnemyArmy) -> (Army, EnemyArmy)
-   chain amount (a, ea) = chainR amount a ea [] []
+   chain amount ([], xs) = ([], xs)
+   chain amount (a, ea) = chainR amount a ea [] [] False
          where
-            chainR :: Amount -> Army -> EnemyArmy -> Army -> EnemyArmy -> (Army, EnemyArmy)
-            chainR amount a ea aAcc eaAcc
-               | amount == 0 = (reverse aAcc, reverse eaAcc)
-               | null a || null ea = (reverse aAcc, reverse eaAcc)
-               | amount > 0 && show (head ea) /= "Dead" && show (head a) /= "Dead" = chainR (amount-2) (tail a) (tail ea) (modifyAliveHP (head a) ((getHP (head a)) + amount):aAcc) ((modifyAliveHP (head ea) (((getHP (head ea))) - (amount-1))):eaAcc)
-               | amount > 0 && show (head ea) /= "Dead" && show (head a) == "Dead" = chainR (amount-1) (tail a) (tail ea) (modifyAliveHP (head a) ((getHP (head a)) + amount):aAcc) ((head ea):eaAcc)
-               | amount > 0 && show (head ea) == "Dead" && show (head a) /= "Dead" = chainR (amount-1) (tail a) (tail ea) ((head a):aAcc) ((modifyAliveHP (head ea) ((getHP (head ea)) - amount-1)):eaAcc)
-               | amount > 0 && show (head ea) == "Dead" && show (head a) == "Dead" = chainR (amount) (tail a) (tail ea) ((head a):aAcc) ((head ea):eaAcc)
-   
+            chainR :: Amount -> Army -> EnemyArmy -> Army -> EnemyArmy -> Bool -> (Army, EnemyArmy)
+            chainR 0 army enemy aAcc eaAcc b = ((aAcc ++ army, eaAcc ++ enemy))
+            chainR amount army@(a:ax) [] aAcc eaAcc False = (aAcc ++ ((modifyAliveHP a ((getHP a) + amount)):ax), eaAcc)
+            chainR amount [] enemy@(ea:eax) aAcc eaAcc True = (aAcc, eaAcc ++ ((modifyAliveHP ea ((getHP ea) - amount)):eax))
+            chainR amount [] [] aAcc eaAcc b = (aAcc, eaAcc)
+            chainR amount army@(a:ax) enemy@(ea:eax) aAcc eaAcc (True)
+               | amount > 0 && show ea /= "Dead" = chainR (amount-1) army eax aAcc (eaAcc ++ [(modifyAliveHP ea ((getHP ea) - amount))]) False
+               | amount > 0 && show ea == "Dead" = chainR (amount) army eax aAcc (eaAcc ++ [ea]) False
+            chainR amount army@(a:ax) enemy@(ea:eax) aAcc eaAcc (False)
+               | amount > 0 && show a /= "Dead" = chainR (amount-1) ax enemy (aAcc ++ [(modifyAliveHP a ((getHP a) + amount))]) eaAcc True
+               | amount > 0 && show a == "Dead" = chainR (amount) ax enemy (aAcc ++ [a]) eaAcc True
+
+   ------------------------
+   battleWithChain :: Army -> EnemyArmy -> Maybe Army {- vagy EnemyArmy lesz az eredmény. -}
+   battleWithChain army enemy = getWinner (fightUntilIsOver army enemy)
+      where
+         fightUntilIsOver :: Army -> EnemyArmy -> (Army, EnemyArmy)
+         fightUntilIsOver a ea
+            | over a || over ea = (a, ea)
+            | otherwise = fightUntilIsOver (formationFix (fst(chain 5 ((multiHeal 20 (haskellBlast (fight ea a))), fight a ea)))) (formationFix (snd (chain 5 ((multiHeal 20 (haskellBlast (fight ea a))), fight a ea))))
+         getWinner :: (Army, EnemyArmy) -> Maybe Army {- vagy EnemyArmy -}
+         getWinner (a, ea)
+            | over a && over ea = Nothing
+            | over a && not (over ea) = Just ea
+            | over ea = Just a
+
+   ------------------------
+   data OneVOne = Winner String | You Health OneVOne | HaskellMage Health OneVOne deriving Eq
+
+
    -- Potion Master
    potionMaster =
       let plx x
