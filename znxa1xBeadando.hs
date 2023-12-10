@@ -118,7 +118,7 @@ module NagyBeadando where
          getBestFiveIndex :: Army -> Integer -> Integer -> Integer -> Integer -> Integer
          getBestFiveIndex [] _ bi _ _ = bi
          getBestFiveIndex army@(x:xs) i bi bs md
-            | mostDead (take 5 army) == 5 = i
+            | mostDead (take 5 army) == 25 = i
             | mostDead (take 5 army) > md || (getHpSum (take 5 army)) > bs && mostDead (take 5 army) > md = getBestFiveIndex xs (i+1) i (getHpSum (take 5 army)) (mostDead (take 5 army))
             | otherwise = getBestFiveIndex xs (i+1) bi bs md
          -- Helper functions
@@ -130,8 +130,8 @@ module NagyBeadando where
          mostDead :: Army -> Integer
          mostDead [] = 0
          mostDead (x:xs)
-            | (getHP x) - 5 >= 0 = 1 + mostDead xs
-            | otherwise = 0 + mostDead xs
+            | (getHP x) - 5 >= 0 = 5 + mostDead xs
+            | otherwise = (getHP x) + mostDead xs
          --------------------
          modifyFrom :: Army -> Integer -> Integer -> Army
          modifyFrom [] _ _ = []
@@ -149,6 +149,8 @@ module NagyBeadando where
    
    multiHeal :: Health -> Army -> Army
    multiHeal _ [] = []
+   multiHeal hp xs
+      | hp <= 0 = xs
    multiHeal hp xs
       | not (null(drop (fromIntegral hp) xs)) = healHpAmount hp xs
       | (length xs) - fromIntegral((countNotDead xs)) == length xs = xs 
@@ -192,6 +194,8 @@ module NagyBeadando where
    ------------------------
    chain :: Amount -> (Army, EnemyArmy) -> (Army, EnemyArmy)
    chain amount ([], xs) = ([], xs)
+   chain amount tupple
+      | amount <= 0 = tupple
    chain amount (a, ea) = chainR amount a ea [] [] False
          where
             chainR :: Amount -> Army -> EnemyArmy -> Army -> EnemyArmy -> Bool -> (Army, EnemyArmy)
