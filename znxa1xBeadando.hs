@@ -45,19 +45,17 @@ module NagyBeadando where
       show (M a) = show a
 
    instance Eq Unit where
-      (E Dead) == (M Dead) = True -- Ez a sor kérdéses de működik
-      (M Dead) == (E Dead) = True -- Ez a sor kérdéses de működik
       (M state1) == (M state2) = state1 == state2
       (E state1) == (E state2) = state1 == state2
+      _ == _ = False
 
    --------------------
    formationFix :: Army -> Army
    formationFix army = fst (takeOutDead army ([], [])) ++ snd (takeOutDead army ([], []))
       where
          takeOutDead :: Army -> (Army, Army) -> (Army, Army)
-         takeOutDead [] acc = acc
+         takeOutDead [] (alive, dead) = (alive, reverse dead)
          takeOutDead (a:as) (alive, dead)
-            -- | M Dead <- a = takeOutDead as (alive, a:dead)
             | (show a) == "Dead" = takeOutDead as (alive, a:dead)
             | otherwise = takeOutDead as (alive ++ [a], dead)
 
@@ -154,37 +152,24 @@ module NagyBeadando where
       | otherwise = countDead xs
    
    multiHeal :: Health -> Army -> Army
-   multiHeal _ [] = []
    multiHeal hp xs
-      | hp <= 0 = xs
-   multiHeal hp xs
-      | null (drop (fromIntegral hp) xs) && (length xs) - fromIntegral((countNotDead xs)) == (length xs) = xs 
-      | null (drop (fromIntegral hp) xs) || (countNotDead xs) < hp = checkIfOutOfHeal (helper hp xs (0,[]))
-      | not (null(drop (fromIntegral hp) xs)) = healHpAmount hp xs
+      | hp < 0 = xs
+      | over xs = xs
+      | otherwise = (helper hp xs [])
          where
-            helper :: Health -> Army -> (Integer, Army) -> (Integer, Army)
-            helper hp xs (hpAcc, acc)
-               | null xs = (hpAcc, acc)
-               | hp == 0 = (hpAcc, acc ++ xs)
-            helper hp (x:xs) (hpAcc, acc)
-               | show x == "Dead" = helper (hp) xs (hp,acc ++ [x])
-               | show x /= "Dead" = helper (hp-1) xs (hp-1,acc ++ [modifyAliveHP x (getHP x + 1)])
-            checkIfOutOfHeal :: (Integer, Army) -> Army
-            checkIfOutOfHeal (hp, army)
-               | hp == 0 = army
-               | otherwise = checkIfOutOfHeal (helper hp army (0,[]))
-            healHpAmount :: Health -> Army -> Army
-            healHpAmount _ [] = []
-            healHpAmount 0 xs = xs
-            healHpAmount hp (x:xs)
-               | show x == "Dead" = x : healHpAmount hp xs
-               | otherwise = modifyAliveHP x ((getHP x) + 1) : healHpAmount (hp - 1) xs 
-
+            helper :: Health -> Army -> Army -> Army
+            helper hp xs acc
+               | hp > 0 && null xs = multiHeal hp acc
+               | null xs = acc
+               | hp <= 0 = acc ++ xs
+            helper hp (x:xs) acc
+               | show x == "Dead" = helper (hp) xs (acc ++ [x])
+               | show x /= "Dead" = helper (hp-1) xs (acc ++ [modifyAliveHP x (getHP x + 1)])
+               
    ------------------------
    --- Bonusz feladatok ---
    ------------------------
    battle :: Army -> EnemyArmy -> Maybe Army {- vagy EnemyArmy lesz az eredmény. -}
-   battle [] [] = Nothing
    battle army eArmy = getWinner (fightUntilIsOver army eArmy)
       where
          fightUntilIsOver :: Army -> EnemyArmy -> (Army, EnemyArmy)
