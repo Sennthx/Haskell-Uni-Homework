@@ -27,28 +27,28 @@ module NagyBeadando where
    data Mage = Master Name Health Spell
    
    instance Show Mage where
-         show (Master name hp spell)
-            | hp < 5 = "Wounded "++name
-            | otherwise = name
+      show (Master name hp spell)
+         | hp < 5 = "Wounded "++name
+         | otherwise = name
 
    instance Eq Mage where
-         (Master n1 hp1 _) == (Master n2 hp2 _) = n1 == n2 && hp1 == hp2
+      (Master n1 hp1 _) == (Master n2 hp2 _) = n1 == n2 && hp1 == hp2
 
    --------------------
    data Unit = M (State Mage)
              | E (State Entity)
 
    instance Show Unit where
-         show (M (Alive a)) = show a
-         show (E (Alive a)) = show a
-         show (E a) = show a
-         show (M a) = show a
+      show (M (Alive a)) = show a
+      show (E (Alive a)) = show a
+      show (E a) = show a
+      show (M a) = show a
 
    instance Eq Unit where
-         (E Dead) == (M Dead) = True -- Ez a sor kérdéses de működik
-         (M Dead) == (E Dead) = True -- Ez a sor kérdéses de működik
-         (M state1) == (M state2) = state1 == state2
-         (E state1) == (E state2) = state1 == state2
+      (E Dead) == (M Dead) = True -- Ez a sor kérdéses de működik
+      (M Dead) == (E Dead) = True -- Ez a sor kérdéses de működik
+      (M state1) == (M state2) = state1 == state2
+      (E state1) == (E state2) = state1 == state2
 
    --------------------
    formationFix :: Army -> Army
@@ -146,15 +146,21 @@ module NagyBeadando where
    countNotDead (x:xs)
       | (show x) == "Dead" = countNotDead xs
       | otherwise = 1 + countNotDead xs
+
+   countDead :: Army -> Integer
+   countDead [] = 0
+   countDead (x:xs)
+      | (show x) == "Dead" = 1 + countDead xs
+      | otherwise = countDead xs
    
    multiHeal :: Health -> Army -> Army
    multiHeal _ [] = []
    multiHeal hp xs
       | hp <= 0 = xs
    multiHeal hp xs
+      | null (drop (fromIntegral hp) xs) && (length xs) - fromIntegral((countNotDead xs)) == (length xs) = xs 
+      | null (drop (fromIntegral hp) xs) || (countNotDead xs) < hp = checkIfOutOfHeal (helper hp xs (0,[]))
       | not (null(drop (fromIntegral hp) xs)) = healHpAmount hp xs
-      | (length xs) - fromIntegral((countNotDead xs)) == length xs = xs 
-      | null (drop (fromIntegral hp) xs) = checkIfOutOfHeal (helper hp xs (0,[]))
          where
             helper :: Health -> Army -> (Integer, Army) -> (Integer, Army)
             helper hp xs (hpAcc, acc)
@@ -199,7 +205,8 @@ module NagyBeadando where
    chain amount (a, ea) = chainR amount a ea [] [] False
          where
             chainR :: Amount -> Army -> EnemyArmy -> Army -> EnemyArmy -> Bool -> (Army, EnemyArmy)
-            chainR 0 army enemy aAcc eaAcc b = ((aAcc ++ army, eaAcc ++ enemy))
+            chainR amount army enemy aAcc eaAcc b
+               | amount <= 0 = ((aAcc ++ army, eaAcc ++ enemy))
             chainR amount army@(a:ax) [] aAcc eaAcc False = (aAcc ++ ((modifyAliveHP a ((getHP a) + amount)):ax), eaAcc)
             chainR amount [] enemy@(ea:eax) aAcc eaAcc True = (aAcc, eaAcc ++ ((modifyAliveHP ea ((getHP ea) - amount)):eax))
             chainR amount [] [] aAcc eaAcc b = (aAcc, eaAcc)
@@ -225,9 +232,19 @@ module NagyBeadando where
             | over ea = Just a
 
    ------------------------
-   data OneVOne = Winner String | You Health OneVOne | HaskellMage Health OneVOne deriving Eq
+   data OneVOne = Winner String 
+                | You Health OneVOne 
+                | HaskellMage Health OneVOne 
+               deriving(Eq)
 
+   instance Show OneVOne where
+      show a = "<" ++ formatWinner a ++ ">"
+         where
+            formatWinner (Winner name) = "|| Winner " ++ name ++ " ||"
+            formatWinner (You hp next) = "You " ++ show hp ++ "; " ++ formatWinner next
+            formatWinner (HaskellMage hp next) = "HaskellMage " ++ show hp ++ "; " ++ formatWinner next
 
+   ------------------------
    -- Potion Master
    potionMaster =
       let plx x
